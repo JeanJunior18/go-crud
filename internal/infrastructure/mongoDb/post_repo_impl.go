@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	model "github.com/JeanJunior18/go-crud/internal/domain"
 	"github.com/JeanJunior18/go-crud/internal/repository"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -20,7 +20,6 @@ type MongoPostRepository struct {
 }
 
 func New(client *mongo.Client, dbName string) *MongoPostRepository {
-	log.Print("MONGO ADAPTER INITIALIZED")
 	return &MongoPostRepository{
 		client: client,
 		dbName: dbName,
@@ -29,8 +28,7 @@ func New(client *mongo.Client, dbName string) *MongoPostRepository {
 
 var _ repository.PostRepository = (*MongoPostRepository)(nil)
 
-func (r *MongoPostRepository) Save(post model.Post) error {
-	ctx := context.TODO()
+func (r *MongoPostRepository) Save(ctx context.Context, post model.Post) error {
 
 	collection := r.client.Database(r.dbName).Collection(postCollection)
 
@@ -42,18 +40,44 @@ func (r *MongoPostRepository) Save(post model.Post) error {
 	return nil
 }
 
-func (r *MongoPostRepository) FindByID(id uuid.UUID) (*model.Post, error) {
+func (r *MongoPostRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Post, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (r *MongoPostRepository) FindAll() ([]model.Post, error) {
-	return []model.Post{}, errors.New("not implemented")
+func (r *MongoPostRepository) FindAll(ctx context.Context) ([]model.Post, error) {
+	collection := r.client.Database(r.dbName).Collection(postCollection)
+
+	cursor, err := collection.Find(ctx, bson.D{})
+
+	if err != nil {
+		return nil, fmt.Errorf("error calling Find")
+	}
+
+	defer cursor.Close(ctx)
+
+	var posts []model.Post
+
+	for cursor.Next(ctx) {
+		var post model.Post
+
+		if err := cursor.Decode(&post); err != nil {
+			return nil, fmt.Errorf("error deconding document: %w", err)
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor interation error: %w", err)
+	}
+
+	return posts, nil
 }
 
-func (r *MongoPostRepository) UpdatePost(id uuid.UUID, post model.Post) error {
+func (r *MongoPostRepository) UpdatePost(ctx context.Context, id uuid.UUID, post model.Post) error {
 	return errors.New("not implemented")
 }
 
-func (r *MongoPostRepository) DeletePost(id uuid.UUID) error {
+func (r *MongoPostRepository) DeletePost(ctx context.Context, id uuid.UUID) error {
 	return errors.New("not implemented")
 }

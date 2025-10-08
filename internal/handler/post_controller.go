@@ -46,3 +46,20 @@ func (c *PostController) CreatePostHandler(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, createdPost)
 }
+
+func (c *PostController) FindPostsHandler(ctx *gin.Context) {
+	serviceCtx, cancel := context.WithTimeout(ctx.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	posts, err := c.service.FindPost(serviceCtx)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to list posts",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
+}

@@ -21,6 +21,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router.POST("/posts", postHandler.CreatePostHandler)
+	router.GET("/posts", postHandler.FindPostsHandler)
 
 	log.Printf("🚀 Servidor iniciado e escutando na porta %s", port)
 	if err := router.Run(port); err != nil {

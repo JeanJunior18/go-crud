@@ -13,6 +13,7 @@ import (
 
 type PostServiceContract interface {
 	CreatePost(ctx context.Context, data dto.CreatePostRequest) (model.Post, error)
+	FindPost(ctx context.Context) ([]model.Post, error)
 }
 
 type PostService struct {
@@ -37,11 +38,21 @@ func (s *PostService) CreatePost(ctx context.Context, data dto.CreatePostRequest
 		CreatedAt: time.Now(),
 	}
 
-	err := s.repo.Save(newPost)
+	err := s.repo.Save(ctx, newPost)
 
 	if err != nil {
 		return model.Post{}, errors.New("error on save")
 	}
 
 	return newPost, nil
+}
+
+func (s *PostService) FindPost(ctx context.Context) ([]model.Post, error) {
+	posts, err := s.repo.FindAll(ctx)
+
+	if err != nil {
+		return nil, errors.New("error on find all")
+	}
+
+	return posts, nil
 }
