@@ -1,9 +1,12 @@
 package handler
 
 import (
-	"fmt"
+	"context"
+	"net/http"
+	"time"
 
 	"github.com/JeanJunior18/go-crud/internal/core"
+	"github.com/JeanJunior18/go-crud/internal/handler/dto"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,5 +21,28 @@ func New(s core.PostServiceContract) *PostController {
 }
 
 func (c *PostController) CreatePostHandler(ctx *gin.Context) {
-	fmt.Printf("Received request")
+	var bodyReq dto.CreatePostRequest
+
+	if err := ctx.ShouldBindJSON(&bodyReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid Payload",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	serviceCtx, cancel := context.WithTimeout(ctx.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	createdPost, err := c.service.CreatePost(serviceCtx, bodyReq)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to create post",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, createdPost)
 }

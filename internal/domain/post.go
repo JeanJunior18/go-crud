@@ -7,11 +7,11 @@ import (
 )
 
 type Post struct {
-	ID        uuid.UUID `json:"id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"createdAt"`
-	UserId    uuid.UUID `json:"userId"`
+	ID        uuid.UUID `json:"id" bson:"id,type=string"`
+	Title     string    `json:"title" bson:"title"`
+	Content   string    `json:"content" bson:"content"`
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UserId    uuid.UUID `json:"userId" bson:"userId,type=string"`
 }
 
 type PostService interface {

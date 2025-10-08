@@ -10,12 +10,15 @@ import (
 )
 
 func main() {
-	port := "localhost:3000"
-	postRepo := mongodb.New()
+	client, dbName := mongodb.InitConnection()
+
+	port := ":3000"
+	postRepo := mongodb.New(client, dbName)
 	postService := core.New(postRepo)
 	postHandler := handler.New(postService)
 
 	router := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
 
 	router.POST("/posts", postHandler.CreatePostHandler)
 
