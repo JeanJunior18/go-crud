@@ -40,8 +40,23 @@ func (r *MongoPostRepository) Save(ctx context.Context, post model.Post) error {
 	return nil
 }
 
-func (r *MongoPostRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Post, error) {
-	return nil, errors.New("not implemented")
+func (r *MongoPostRepository) FindByID(ctx context.Context, id string) (*model.Post, error) {
+	postUUID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid UUID format provided: %w", err)
+	}
+
+	collection := r.client.Database(r.dbName).Collection(postCollection)
+	result := collection.FindOne(ctx, bson.D{{"id", postUUID}})
+	post := &model.Post{}
+
+	if err := result.Decode(post); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to decode post with ID %s: %w", id, err)
+	}
+	return post, nil
 }
 
 func (r *MongoPostRepository) FindAll(ctx context.Context) ([]model.Post, error) {
@@ -74,10 +89,10 @@ func (r *MongoPostRepository) FindAll(ctx context.Context) ([]model.Post, error)
 	return posts, nil
 }
 
-func (r *MongoPostRepository) UpdatePost(ctx context.Context, id uuid.UUID, post model.Post) error {
+func (r *MongoPostRepository) UpdatePost(ctx context.Context, id string, post model.Post) error {
 	return errors.New("not implemented")
 }
 
-func (r *MongoPostRepository) DeletePost(ctx context.Context, id uuid.UUID) error {
+func (r *MongoPostRepository) DeletePost(ctx context.Context, id string) error {
 	return errors.New("not implemented")
 }

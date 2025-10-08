@@ -63,3 +63,28 @@ func (c *PostController) FindPostsHandler(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, posts)
 }
+
+func (c *PostController) FindPostByIdHandler(ctx *gin.Context) {
+	serviceCtx, cancel := context.WithTimeout(ctx.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	id := ctx.Param("id")
+	post, err := c.service.FindById(serviceCtx, id)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":  "Failed to get post by id",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	if post == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "ID not found",
+			"id":    id,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, *post)
+}
